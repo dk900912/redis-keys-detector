@@ -44,8 +44,11 @@ public class FileSystemRepositoryDirectoryScanner implements RepositoryDirectory
         if (!shouldScan(directoryPath)) {
             return Collections.emptyList();
         }
-        try (Stream<Path> walk = Files.walk(Paths.get(directoryPath))) {
-            return walk.filter(Files::isDirectory)
+        // 限制搜索深度：3
+        try (Stream<Path> walk = Files.walk(Paths.get(directoryPath), 3)) {
+            // 使用并行流
+            return walk.parallel()
+                    .filter(Files::isDirectory)
                     .filter(scannerStrategy::isValidRepository)
                     .map(Path::toFile)
                     .toList();
