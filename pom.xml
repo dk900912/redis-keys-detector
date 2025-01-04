@@ -6,7 +6,12 @@
 
     <groupId>io.github.dk900912</groupId>
     <artifactId>redis-keys-detector</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0-RELEASE</version>
+
+    <name>redis-keys-detector</name>
+    <description>About
+        The redis-keys-detector is a tool designed to scan and detect risks associated with the usage of Redis keys in a codebase. It generates detailed risk reports to help users identify potential issues. The tool supports scanning code in multiple programming languages and relies on Java 21.</description>
+    <url>https://github.com/dk900912/redis-keys-detector</url>
 
     <developers>
         <developer>
@@ -135,7 +140,7 @@
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.7</version>
+                <version>1.7.0</version>
                 <extensions>true</extensions>
                 <configuration>
                     <serverId>ossrh</serverId>

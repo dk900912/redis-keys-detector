@@ -18,12 +18,11 @@ public class FileSystemRepositoryDirectoryScanner implements RepositoryDirectory
 
     private final DirectoryScannerStrategy scannerStrategy;
 
-    public FileSystemRepositoryDirectoryScanner() {
-        this.scannerStrategy = new GitDirectoryScannerStrategy();
-    }
+    private final Integer maxDepth;
 
-    public FileSystemRepositoryDirectoryScanner(DirectoryScannerStrategy scannerStrategy) {
+    public FileSystemRepositoryDirectoryScanner(DirectoryScannerStrategy scannerStrategy, Integer maxDepth) {
         this.scannerStrategy = scannerStrategy;
+        this.maxDepth = maxDepth;
     }
 
     @Override
@@ -44,8 +43,8 @@ public class FileSystemRepositoryDirectoryScanner implements RepositoryDirectory
         if (!shouldScan(directoryPath)) {
             return Collections.emptyList();
         }
-        // 限制搜索深度：3
-        try (Stream<Path> walk = Files.walk(Paths.get(directoryPath), 3)) {
+        // 限制搜索深度
+        try (Stream<Path> walk = Files.walk(Paths.get(directoryPath), maxDepth)) {
             // 使用并行流
             return walk.parallel()
                     .filter(Files::isDirectory)

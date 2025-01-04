@@ -19,11 +19,26 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.List;
 
+/**
+ * KeysRiskDetector为启动引导类，用于管理Git仓库的扫描和风险检测流程。
+ * 它通过一系列命令链来执行以下任务：
+ * - 打开Git仓库
+ * - 查找最繁忙的分支
+ * - 切换到最繁忙的分支
+ * - 填充最繁忙分支的信息
+ * - 扫描源文件
+ * - 生成检测报告
+ * - 关闭Git仓库
+ *
+ * @author dukui
+ */
 public class KeysRiskDetector {
 
     private static final Logger logger = LoggerFactory.getLogger(KeysRiskDetector.class);
 
     private String input;
+
+    private Integer gitDirectoryMaxWalkingDepth;
 
     private RiskDetectionReporter reporter;
 
@@ -34,7 +49,7 @@ public class KeysRiskDetector {
     public void detect() {
         final ChainBase chainBase = createCommandChain();
         final FileSystemRepositoryDirectoryScanner fileSystemRepositoryDirectoryScanner
-                = new FileSystemRepositoryDirectoryScanner(new GitDirectoryScannerStrategy());
+                = new FileSystemRepositoryDirectoryScanner(new GitDirectoryScannerStrategy(), getGitDirectoryMaxWalkingDepth());
         final List<File> repoDirectories
                 = fileSystemRepositoryDirectoryScanner.getRepoDirectories(getInput());
         for (File repoDirectory : repoDirectories) {
@@ -54,6 +69,10 @@ public class KeysRiskDetector {
 
     public String getInput() {
         return input;
+    }
+
+    public Integer getGitDirectoryMaxWalkingDepth() {
+        return gitDirectoryMaxWalkingDepth;
     }
 
     public RiskDetectionReporter getReporter() {
@@ -80,12 +99,19 @@ public class KeysRiskDetector {
 
         private String input;
 
+        private Integer gitDirectoryMaxWalkingDepth;
+
         private RiskDetectionReporter reporter;
 
         private List<CodeScanner> scanners;
 
         public KeyRiskDetectorBuilder input(String input) {
             this.input = input;
+            return this;
+        }
+
+        public KeyRiskDetectorBuilder gitDirectoryMaxWalkingDepth(Integer gitDirectoryMaxWalkingDepth) {
+            this.gitDirectoryMaxWalkingDepth = gitDirectoryMaxWalkingDepth;
             return this;
         }
 
@@ -104,15 +130,20 @@ public class KeysRiskDetector {
             if (StringUtils.isBlank(this.input)) {
                 throw new IllegalArgumentException("The 'input' argument can't be null");
             }
+            if (this.gitDirectoryMaxWalkingDepth == null) {
+                this.gitDirectoryMaxWalkingDepth = 3;
+                logger.warn("The 'gitDirectoryMaxWalkingDepth' argument is null, using the default 3");
+            }
             if (this.reporter == null) {
                 this.reporter = new SimpleRiskDetectionReporter();
-                logger.warn("The 'reporter' argument is null, using the default reporter");
+                logger.warn("The 'reporter' argument is null, using the default logging reporter");
             }
             if (CollectionUtils.isEmpty(this.scanners)) {
                 this.scanners = CodeScannerComposite.DEFAULT_CODE_SCANNERS;
-                logger.warn("The 'scanners' argument is null, using the default scanners");
+                logger.warn("The 'scanners' argument is null, using the default scanners: {}", this.scanners.stream().map(CodeScanner::support).toList());
             }
             detector.input = this.input;
+            detector.gitDirectoryMaxWalkingDepth = this.gitDirectoryMaxWalkingDepth;
             detector.reporter = this.reporter;
             detector.scanners = scanners;
             return detector;
