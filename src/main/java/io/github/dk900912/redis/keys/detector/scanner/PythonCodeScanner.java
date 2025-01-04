@@ -1,13 +1,7 @@
 package io.github.dk900912.redis.keys.detector.scanner;
 
-import io.github.dk900912.redis.keys.detector.model.SourceCodeRisk;
+import org.apache.commons.lang3.StringUtils;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Pattern;
 
 public class PythonCodeScanner extends AbstractCodeScanner {
@@ -21,20 +15,16 @@ public class PythonCodeScanner extends AbstractCodeScanner {
     }
 
     @Override
-    public List<SourceCodeRisk> scanFile(File file) {
-        List<SourceCodeRisk> sourceCodeRisks = new ArrayList<>();
-        int riskLineNumber = 0;
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                riskLineNumber++;
-                if (!shouldIgnored(line) && REDIS_KEYS_PATTERN_PYTHON.matcher(line).find()) {
-                    sourceCodeRisks.add(new SourceCodeRisk(file.getAbsolutePath(), riskLineNumber, line.trim()));
-                }
-            }
-        } catch (IOException e) {
-            // Ignored
+    public boolean ignore(String content) {
+        if (StringUtils.isBlank(content)) {
+            return true;
         }
-        return sourceCodeRisks;
+        String trimmed = content.trim();
+        return trimmed.startsWith("#") || trimmed.startsWith("'''");
+    }
+
+    @Override
+    protected Pattern getPattern() {
+        return REDIS_KEYS_PATTERN_PYTHON;
     }
 }

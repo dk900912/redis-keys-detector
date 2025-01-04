@@ -37,13 +37,11 @@ public class PopulateBusiestBranchInfoCommand implements Command {
     }
 
     public boolean populateBusiestBranchInfo(Git git, BranchSimpleInfo busiestBranch, File repositoryDirectory) {
-        TreeWalk treeWalk = null;
-        try {
+        try (TreeWalk treeWalk = new TreeWalk(git.getRepository())) {
             // 获取当前分支名称
             String currentBranch = git.getRepository().getFullBranch();
 
             // 获取当前分支的最新提交的树
-            treeWalk = new TreeWalk(git.getRepository());
             treeWalk.addTree(git.getRepository().resolve(currentBranch + "^{tree}"));
             treeWalk.setRecursive(true);
 
@@ -74,11 +72,6 @@ public class PopulateBusiestBranchInfoCommand implements Command {
             return true;
         } catch (IOException e) {
             logger.error("Failed to populate busiest branch info: {}", BranchNameUtil.getSimplifiedBranchNameBasedOrigin(busiestBranch.getBranchName()), e);
-        } finally {
-            // 关闭资源
-            if (treeWalk != null) {
-                treeWalk.close();
-            }
         }
         return false;
     }
